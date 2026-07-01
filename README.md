@@ -205,7 +205,7 @@ The discrete roots of $p_k(s)$ are controlled by the Stokes phenomenon of the la
 $$
 \beta_k(s) \sim c_A e^{k S_A(z)} + c_B e^{k S_B(z)} = 0
 \quad \Longrightarrow \quad
-\operatorname{Re}(S_A)=\operatorname{Re}(S_B).
+{Re}(S_A)={Re}(S_B).
 $$
 
 - C-shell caustic: in the thermodynamic limit $k\to\infty$, discrete roots condense onto anti-Stokes lines. The observed C-shell (cardioid-like envelope) is interpreted as the geometric caustic of this phase-transition boundary. Inside the shell, roots remain dense and real; outside, they move into complex branches as one saddle becomes exponentially dominant.
@@ -253,11 +253,7 @@ Numerical domain-coloring maps and stabilized phase-field plots support a genuin
 
 These points are prospective research directions and not yet final results.
 
-- Lefschetz-thimble bifurcation analysis: decompose the physical contour as
-$
-\mathcal{C}=\sum_{\sigma} n_{\sigma}\,\mathcal{J}_{\sigma}
-$
-and test whether C-shell crossing induces jumps in intersection numbers $n_\sigma$, making formerly dominant saddles topologically inactive.
+- Lefschetz-thimble bifurcation analysis: decompose the physical contour as $\mathcal{C}=\sum_{\sigma} n_{\sigma}\,\mathcal{J}_{\sigma}$ and test whether C-shell crossing induces jumps in intersection numbers $n_\sigma$, making formerly dominant saddles topologically inactive.
 
 - Geometric uniformization: construct a uniformizing map that unfolds the multi-sheeted surface into a single periodic domain, to avoid explicit saddle tracking across branch cuts.
 
