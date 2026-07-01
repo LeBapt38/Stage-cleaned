@@ -1,3 +1,26 @@
+# M2 intership at LAPTh
+
+### Table of content
+
+- [Froissart-Gribov Projection](#froissart-gribov-projection)
+    - [Project Goal (Froissart-Gribov)](#project-goal)
+    - [Files (Froissart-Gribov)](#files)
+        - [Code_report.nb](#code_reportnb)
+        - [Test_building_FG.nb](#test_building_fgnb)
+        - [FG_disc_analytic.wl](#fg_disc_analyticwl)
+        - [Regge_traj.nb](#regge_trajnb)
+- [The Regge residues of the Veneziano amplitude](#the-regge-residues-of-the-veneziano-amplitude)
+    - [Project goal (Veneziano)](#project-goal-1)
+        - [1. Stokes Lines and Correspondence with Roots](#1-stokes-lines-and-correspondence-with-roots)
+        - [2. Migrating Saddle and Subleading Orders in k](#2-migrating-saddle-and-subleading-orders-in-k)
+        - [3. Asymptotic Formulas and Fine-Structure Matching](#3-asymptotic-formulas-and-fine-structure-matching)
+        - [4. Analytical Matching and Topological Structures](#4-analytical-matching-and-topological-structures)
+        - [5. Future Directions (Open Research Horizons)](#5-future-directions-open-research-horizons)
+    - [Files (Veneziano)](#files-1)
+        - [Toymodel_Bessel.nb](#toymodel_besselnb)
+        - [Pol_Veneziano.nb](#pol_venezianonb)
+
+
 # Froissart-Gribov Projection
 
 ## Project Goal
@@ -162,3 +185,104 @@ How to use it:
 
 - This notebook is the trajectory-building step that comes after the Froissart-Gribov grid is available.
 - It still requires manual input to choose the starting points for the trajectories.
+
+# The Regge residues of the Veneziano amplitude
+
+## Project goal
+
+This part of the project studies the Regge residues of the Veneziano amplitude as a complex-analytic object, with the aim of understanding how the zeros of the residue polynomials organize in the complex plane and what this organization reveals about asymptotic dynamics.
+
+In the report-level perspective, the objective is to characterize the root locus of the residue polynomials $p_k(s)$, to connect this locus with asymptotic/saddle-point control at large $k$, and to identify robust geometric structures that persist across orders. The practical workflow starts from numerical root tracking and visualization (domain coloring, phase diagnostics), then moves to asymptotic interpretation, and finally to analytical matching formulas.
+
+The recent work extends this baseline substantially and gives a global interpretation in terms of Stokes geometry, migrating saddles, and multi-sheet topology.
+
+### 1. Stokes Lines and Correspondence with Roots
+
+The discrete roots of $p_k(s)$ are controlled by the Stokes phenomenon of the large-$k$ asymptotic expansion.
+
+- Saddle interferences: roots appear where two competing saddle contributions have equal magnitude and opposite phase, yielding destructive interference:
+
+$$
+\beta_k(s) \sim c_A e^{k S_A(z)} + c_B e^{k S_B(z)} = 0
+\quad \Longrightarrow \quad
+\operatorname{Re}(S_A)=\operatorname{Re}(S_B).
+$$
+
+- C-shell caustic: in the thermodynamic limit $k\to\infty$, discrete roots condense onto anti-Stokes lines. The observed C-shell (cardioid-like envelope) is interpreted as the geometric caustic of this phase-transition boundary. Inside the shell, roots remain dense and real; outside, they move into complex branches as one saddle becomes exponentially dominant.
+
+### 2. Migrating Saddle and Subleading Orders in $k$
+
+A purely leading-order analysis in $k$ is insufficient to recover the C-shell boundary. The decisive mechanism appears at subleading order.
+
+- $1/k$ mechanism: subleading corrections inject an effective migrating saddle into the complex $t$-plane action.
+- Saddle interaction: this migrating saddle is not static. As $z$ changes, it travels across the $t$-plane, breaks translation symmetry, and collides/interacts with a fixed periodic tower of saddles.
+
+This interaction is the key ingredient needed to reproduce the global root geometry rather than only local asymptotic behavior.
+
+### 3. Asymptotic Formulas and Fine-Structure Matching
+
+Restricting to the complex $t$-plane, $t=x+i\chi$, one obtains a structured transcendental picture.
+
+- Approxiamte position of the migrating tower:
+
+$$t_{\text{mig}} \approx -\frac{z \sqrt{k}}{\sqrt{1 + z + \frac{1}{k}}}$$
+
+- Tower asymptotics: tower saddles are asymptotically separated by $2\pi$ along the imaginary direction, $\chi\approx 2\pi n$. On high sheets, their real part drifts logarithmically:
+
+$$
+x\approx 2\ln\left|2\pi n\left(1+\frac{1}{z}\right)\right|.
+$$
+
+- Fine-structure matching equation: matching tower phase to the dominant background gives a transcendental relation for root layers/rays:
+
+$$
+\arg(z)-\frac{1}{2}\arg\left(1+z+\frac{1}{k}\right)
+=-\frac{\pi}{2}-\frac{\ln\left|2\pi n\left(1+\frac{1}{z}\right)\right|}{\pi n}.
+$$
+
+This equation tracks the successive transitions of the migrating root across discrete branches.
+
+### 4. Analytical Matching and Topological Structures
+
+Numerical domain-coloring maps and stabilized phase-field plots support a genuinely multi-sheeted analytic structure.
+
+- Multi-sheeted Riemann surface: logarithmic and hyperbolic branch cuts partition the $t$-plane into an infinite stack of sheets.
+- Moving topological defect: the migrating saddle behaves as a moving defect crossing branch cuts as $z$ evolves, passing from the principal sheet to higher sheets and reorganizing the relevant Stokes graph.
+
+### 5. Future Directions (Open Research Horizons)
+
+These points are prospective research directions and not yet final results.
+
+- Lefschetz-thimble bifurcation analysis: decompose the physical contour as
+$
+\mathcal{C}=\sum_{\sigma} n_{\sigma}\,\mathcal{J}_{\sigma}
+$
+and test whether C-shell crossing induces jumps in intersection numbers $n_\sigma$, making formerly dominant saddles topologically inactive.
+
+- Geometric uniformization: construct a uniformizing map that unfolds the multi-sheeted surface into a single periodic domain, to avoid explicit saddle tracking across branch cuts.
+
+
+- Physical interpretation (UV completion and resurgence): the migrating saddle could be viewed as an effective localized (particle-like) sector, while the periodic tower encodes non-local string-like excitations. A resurgence analysis of the $1/k$ sector could clarify how global tower data non-perturbatively restores high-energy consistency.
+
+## Files
+
+### Toymodel_Bessel.nb
+
+Notebook containing two toy models where the Stokes description is developed analytically. It is used as the controlled setting to derive and test the saddle-interference picture before applying it to the full Veneziano residue problem.
+
+How to use it:
+
+- Use it as the analytic benchmark for the Stokes-line mechanism.
+- Compare the exact and asymptotic behavior of the toy models with the qualitative structures observed later in the Veneziano analysis.
+
+### Pol_Veneziano.nb
+
+Main notebook for the Veneziano residue analysis. It explores the saddle structure in detail, then attempts a Stokes analysis of the corresponding phase geometry. Lastly, it builds the curve obtained from the transcendental expression of the argument.
+
+Current status:
+
+- The saddle-structure exploration is implemented and can be used directly.
+- The Stokes-analysis plots are present but require careful graph-cleaning modifications to get fully robust visuals.
+- The transcendental-argument curve construction is included as the final comparison layer.
+
+
