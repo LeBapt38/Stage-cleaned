@@ -148,7 +148,7 @@ p[d_?nq]:=Table[i,{i,1,(d-3)/2}]/;OddQ[d]
 
 ClearAll[M,discTM,discUM];
 (*M[d_,s_,t_,u_,\[Sigma]g_,pg_]:=(Mraw[d,s,t,u,\[Sigma]g,pg]+\[CapitalDelta]M[d,s,t,u]+\[Delta]M[d,s,t,u]+\[Epsilon]M[d,s,t,u])*)
-M[d_,s_,t_,u_,\[Sigma]g_,pg_]:=Join[Mraw[d,s,t,u,\[Sigma]g,pg],\[CapitalDelta]M[d,s,t,u],\[Delta]M[d,s,t,u](*,\[Epsilon]M[d,s,t,u]*)]//Flatten[#,1]&
+M[d_,s_,t_,u_,\[Sigma]g_,pg_]:=Join[(*Mraw[d,s,t,u,\[Sigma]g,pg],*)\[CapitalDelta]M[d,s,t,u],{\[Delta]M[d,s,t,u]}(*,\[Epsilon]M[d,s,t,u]*)]//Flatten[#,1]&
 discTM[d_,s_,t_,u_,\[Sigma]g_,pg_]:=Join[discTMraw[d,s,t,u,\[Sigma]g,pg](*,discT\[CapitalDelta]M[d,s,t,u]*)(*,\[Delta]M[d,s,t,u],\[Epsilon]M[d,s,t,u]*)]//Flatten[#,1]&
 discUM[d_,s_,t_,u_,\[Sigma]g_,pg_]:=Join[discUMraw[d,s,t,u,\[Sigma]g,pg](*,discU\[CapitalDelta]M[d,s,t,u]*)(*,\[Delta]M[d,s,t,u],\[Epsilon]M[d,s,t,u]*)]//Flatten[#,1]&
 
@@ -168,9 +168,9 @@ mysdpbout=ToExpression@Import[coeffAmpPath];
 
 
 Clear[exprSTU,discTexprSTU,discUexprSTU]
-exprSTU[s_,t_,u_]=1/(32\[Pi]) myM[4,20][[All,1]] . myM[4,20][[All,2]]/.mysdpbout[[2]];
-discTexprSTU[s_,t_,u_]=1/(32\[Pi]) myDiscTM[4,20][[All,1]] . myDiscTM[4,20][[All,2]]/.mysdpbout[[2]];
-discUexprSTU[s_,t_,u_]=1/(32\[Pi]) myDiscUM[4,20][[All,1]] . myDiscUM[4,20][[All,2]]/.mysdpbout[[2]];
+exprSTU[s_,t_,u_]=1/(32\[Pi]) myM[d,20][[All,1]] . myM[d,20][[All,2]]/.mysdpbout[[2]];
+discTexprSTU[s_,t_,u_]=1/(32\[Pi]) myDiscTM[d,20][[All,1]] . myDiscTM[d,20][[All,2]]/.mysdpbout[[2]];
+discUexprSTU[s_,t_,u_]=1/(32\[Pi]) myDiscUM[d,20][[All,1]] . myDiscUM[d,20][[All,2]]/.mysdpbout[[2]];
 
 
 Print["Amplitude loaded"]
@@ -190,26 +190,26 @@ discTExpr[s_,z_]=discTexprSTU[s,tt[s,z],uu[s,z]];
 discUExpr[s_,z_]=discUexprSTU[s,tt[s,z],uu[s,z]];
 
 
-Clear[exprJmain1,exprJmain2]
+Clear[exprJmain1,exprJkeyhole,exprJthresh,exprJ]
 p0=8;
 (*Integration of the regular part (with rho ansatz)*)
 exprJmain1[J_,s_]:=MyNIntegrateFaster[(PolQ[J,d,z]discTExpr[s,z])//CompactIntegrand[#,z,z0t[s]]&,{\[Phi],0,\[Pi]},p0];
-exprJmain2[J_,s_]:=MyNIntegrateFaster[(PolQ[J,d,z]discUExpr[s,z])//CompactIntegrand[#,z,z0u[s]]&,{\[Phi],0,\[Pi]},p0];
+(*exprJmain2[J_,s_]:=MyNIntegrateFaster[(PolQ[J,d,z]discUExpr[s,z])//CompactIntegrand[#,z,z0u[s]]&,{\[Phi],0,\[Pi]},p0];*)
 Clear[exprJkeyhole,exprJthresh]
 (*Definition of the function computing the divergent threshold terms when n half integer*)
 exprJkeyhole[J_,s_,n_]:=Module[{div,divT,exprSTU,expr,DiscExprT,exprJmain,exprJkeyhole1},
-div[ss_]:=(4-ss)^-n;
-divT[ss_]:=(-1)^n (ss-4)^-n;
+div[ss_]:=(4-ss)^(-n-1/2);
+divT[ss_]:=(-1)^n (ss-4)^(-n-1/2);
 exprSTU[ss_,t_,u_]:=div[ss]+div[u]+div[t];
 expr[ss_,z_]:=exprSTU[ss, tt[ss,z],uu[ss,z]];
 DiscExprT[ss_,z_]:=divT[tt[ss,z]];
-exprJmain[JJ_,ss_]:=MyNIntegrateFaster[(PolQ[JJ,d,z]DiscExprT[ss,z])//CompactIntegrand[#,z,z0t[ss]+Exp[I Arg[-1+z0t[ss]]]epsilonT[JJ,ss]]&,{\[Phi],0,\[Pi]},p0];
-exprJkeyhole1[JJ_, ss_, ord_: 4] := Module[
+exprJmain[JJ_,ss_]:=MyNIntegrateFaster[(PolQ[JJ,d,z]DiscExprT[ss,z])//CompactIntegrand[#,z,z0t[ss]+Exp[I Arg[-1+z0t[ss]]]10^-5]&,{\[Phi],0,\[Pi]},p0];
+exprJkeyhole1[JJ_, ss_, ord_: 6] := Module[
 	  {z0, dir, eps, \[Alpha], c0, qk},
 	  z0  = z0t[ss];
 	  dir = Exp[I Arg[z0 - 1]];   (* direction of the cut / keyhole ray *)
 	  eps = 10^-5;
-	  \[Alpha]   = n ;
+	  \[Alpha]   = n +1/2;
 	  (* regular prefactor of the discontinuity at the branch point *)
 	  c0 = Limit[(z - z0)^\[Alpha] DiscExprT[ss, z],z -> z0,Direction -> dir];
 	  qk[k_] := SeriesCoefficient[PolQ[JJ, d, z], {z, z0, k}];
@@ -219,12 +219,12 @@ exprJmain[J,s]+exprJkeyhole1[J,s]
 ];
 (*Computation of both integer and half integer divergent terms*)
 exprJthresh[J_,s_]:=Module[{Residue, Keyhole},
-Residue=Sum[\[Alpha][0,0,0,Boole[EvenQ[d]]-2(n-Floor[(d-3)/2])] (Pi (-1)^(n+1))/(n-1)! (D[PolQ[J,d,z],{z,n-1}]/.z->z0t[s])((s-4)/2)^-n,{n,Floor[(d-3)/2],1,-1}];
-Keyhole=Sum[\[Alpha][0,0,0,Boole[OddQ[d]]-2(n-Floor[(d-4)/2]-1/2)]exprJkeyhole[J,s,n],{n,Floor[(d-4)/2]+1/2,1/2,-1}];
-Residue+Keyhole/.mysdpbout[[2]]
+Residue=Sum[If[Boole[EvenQ[d]]-2(n-Floor[(d-3)/2])==0, Sin[\[Pi] (d-3)/2],1]\[Alpha][0,0,0,Boole[EvenQ[d]]-2(n-Floor[(d-3)/2])] (Pi (-1)^(n+1))/(n-1)! (D[PolQ[J,d,z],{z,n-1}]/.z->z0t[s])((s-4)/2)^-n,{n,Floor[(d-3)/2],1,-1}];
+Keyhole=Sum[If[Boole[OddQ[d]]-2(n-Floor[(d-4)/2])==0, Sin[\[Pi] (d-3)/2],1]\[Alpha][0,0,0,Boole[OddQ[d]]-2(n-Floor[(d-4)/2])]exprJkeyhole[J,s,n],{n,Floor[(d-4)/2],0,-1}];
+nd[d]/(32 Pi) (Residue+Keyhole/.mysdpbout[[2]])
 ];
 (*Full expression of the projection. The choice t/u cut done for efficiency purpose, less important with this implementation.*)
-exprJ[J_,s_]:=If[Re[s]>4,exprJmain1[J,s]+exprJthresh[J,s],exprJmain2[J,s]+exprJthresh[J,s]]
+exprJ[J_,s_]:=(*If[Re[s]>4,*)exprJmain1[J,s]+exprJthresh[J,s](*,exprJmain2[J,s]+exprJthresh[J,s]]*)
 
 
 (*Definition of the usual projection with Pj*)
@@ -233,11 +233,11 @@ Pgen[J_,d_,z_]:=Hypergeometric2F1[-J,J+d-3,(d-2)/2,(1-z)/2];
 IPt[J_,s_]:=MyNIntegrateFaster[Sin[\[Theta]]*(1-Cos[\[Theta]]^2)^((d-4)/2) Pgen[J,d,Cos[\[Theta]]]*expr[s,Cos[\[Theta]]],{\[Theta],0,Pi},p0]
 
 
-(*J=2;
-testS=11.7657+17.6481I;
-a=exprJ[J,Rationalize[testS]]
+J=3;
+testS=9+10I;
+a=exprJthresh[J,Rationalize[testS]]
 b=IPt[J,Rationalize[testS]]
-Abs[(a-b)/(a+b)]*)
+Abs[(a-b)/(a+b)]
 
 
 (* ::Section:: *)

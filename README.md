@@ -1,5 +1,9 @@
 # M2 intership at LAPTh
 
+Add condition s
+
+check FG
+
 ### Table of content
 
 - [Froissart-Gribov Projection](#froissart-gribov-projection)
