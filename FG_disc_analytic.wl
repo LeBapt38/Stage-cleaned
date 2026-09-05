@@ -1,7 +1,7 @@
 (* ::Package:: *)
 
 (*Uncomment first part and comment the list tu use from terminal*)
-args = (*$ScriptCommandLine[[2 ;;]]*){"/Users/baptisteguilleminot/Documents/M2/Stage/data/SDPB_d=6_ci=0_lmax=16_Nmax=20_minmax=max_improv={TH, subTH, SPC}.txt","6","/Users/baptisteguilleminot/Documents/M2/Stage/data/6dMinN20test.mx"};
+args = (*$ScriptCommandLine[[2 ;;]]*){"/Users/baptisteguilleminot/Documents/M2/Stage_cleaned/data/SDPB_d=6_ci=0_lmax=16_Nmax=20_minmax=max_improv={TH, subTH, SPC}.txt","6","/Users/baptisteguilleminot/Documents/M2/Stage_cleaned/data/"};
 coeffAmpPath = args[[1]];
 d = ToExpression[args[[2]]];
 outPath = args[[3]];
@@ -113,6 +113,13 @@ cond[i,j,n,m,\[Sigma]g[[i]],\[Sigma]g[[j]],pg[[i]],pg[[j]]]},(* condition to avo
 {i,Length@\[Sigma]g},{j,Length@\[Sigma]g},{n,0,pg[[i]]},{m,0,pg[[j]]}]//Flatten[#,2]&;
 
 
+(*N[discT\[Rho]ansatz[2,1,1,0,1,1,1]]
+discT\[Rho]ansatz[s,t,u,1,0,\[Sigma]i,\[Sigma]j]
+discT\[Rho]ansatz[s,t,u,0,1,\[Sigma]i,\[Sigma]j]
+discT\[Rho]ansatz[s,t,u,0,0,\[Sigma]i,\[Sigma]j]*)
+N[nd[6]]
+
+
 (* ::Subsection:: *)
 (*Divergent piece*)
 
@@ -148,7 +155,7 @@ p[d_?nq]:=Table[i,{i,1,(d-3)/2}]/;OddQ[d]
 
 ClearAll[M,discTM,discUM];
 (*M[d_,s_,t_,u_,\[Sigma]g_,pg_]:=(Mraw[d,s,t,u,\[Sigma]g,pg]+\[CapitalDelta]M[d,s,t,u]+\[Delta]M[d,s,t,u]+\[Epsilon]M[d,s,t,u])*)
-M[d_,s_,t_,u_,\[Sigma]g_,pg_]:=Join[(*Mraw[d,s,t,u,\[Sigma]g,pg],*)\[CapitalDelta]M[d,s,t,u],{\[Delta]M[d,s,t,u]}(*,\[Epsilon]M[d,s,t,u]*)]//Flatten[#,1]&
+M[d_,s_,t_,u_,\[Sigma]g_,pg_]:=Join[Mraw[d,s,t,u,\[Sigma]g,pg],\[CapitalDelta]M[d,s,t,u],{\[Delta]M[d,s,t,u]}(*,\[Epsilon]M[d,s,t,u]*)]//Flatten[#,1]&
 discTM[d_,s_,t_,u_,\[Sigma]g_,pg_]:=Join[discTMraw[d,s,t,u,\[Sigma]g,pg](*,discT\[CapitalDelta]M[d,s,t,u]*)(*,\[Delta]M[d,s,t,u],\[Epsilon]M[d,s,t,u]*)]//Flatten[#,1]&
 discUM[d_,s_,t_,u_,\[Sigma]g_,pg_]:=Join[discUMraw[d,s,t,u,\[Sigma]g,pg](*,discU\[CapitalDelta]M[d,s,t,u]*)(*,\[Delta]M[d,s,t,u],\[Epsilon]M[d,s,t,u]*)]//Flatten[#,1]&
 
@@ -173,6 +180,40 @@ discTexprSTU[s_,t_,u_]=1/(32\[Pi]) myDiscTM[d,20][[All,1]] . myDiscTM[d,20][[All
 discUexprSTU[s_,t_,u_]=1/(32\[Pi]) myDiscUM[d,20][[All,1]] . myDiscUM[d,20][[All,2]]/.mysdpbout[[2]];
 
 
+Clear[expr,discTExpr,discUExpr]
+expr[s_,z_]=exprSTU[Rationalize[s], tt[Rationalize[s], Rationalize[z]], uu[Rationalize[s], Rationalize[z]]];
+discTExpr[s_,z_]=discTexprSTU[Rationalize[s], tt[Rationalize[s], Rationalize[z]], uu[Rationalize[s], Rationalize[z]]];
+(*discUExpr[s_,z_]=discUexprSTU[s,tt[s,z],uu[s,z]];*)
+
+
+exprSTUrebuilt[ss_, tt_, uu_] := Module[{terms},
+  terms = M[d, ss, tt, uu, \[Sigma]g[20], pg[20]];
+  (terms[[All, 1]] . terms[[All, 2]] /. mysdpbout[[2]]) / (32 Pi)
+]
+discTexprSTUrebuilt[ss_, tt_, uu_] := Module[{terms},
+  terms = discTM[d, ss, tt, uu, \[Sigma]g[20], pg[20]];
+  (terms[[All, 1]] . terms[[All, 2]] /. mysdpbout[[2]]) / (32 Pi)
+]
+exprRe[s_, z_] := exprSTUrebuilt[Rationalize[s], tt[Rationalize[s], Rationalize[z]], uu[Rationalize[s], Rationalize[z]]]
+discTExprRe[s_, z_] := discTexprSTUrebuilt[Rationalize[s], tt[Rationalize[s], Rationalize[z]], uu[Rationalize[s], Rationalize[z]]]
+N[exprRe[20.1+20.1 I,20.1+20.1 I]]
+expr[Rationalize[20.1+20.1 I],Rationalize[20.1+20.1 I]]
+N[discTExprRe[20.1+20.1 I,20.1+20.1 I]]
+discTExpr[Rationalize[20.1+20.1 I],Rationalize[20.1+20.1 I]]
+
+
+testM=ParallelTable[{x,y,xx,yy,Re[exprRe[x+I y, xx+I yy]],Im[exprRe[x+I y, xx+I yy]]},{x,-20.1, 19.9, 10},{y,-20.1, 19.9, 10},{xx,-20.1, 19.9, 10},{yy,-20.1, 19.9, 10}];
+testDiscM=ParallelTable[{x,y,xx,yy,Re[discTExprRe[x+I y, xx+I yy]],Im[discTExprRe[x+I y, xx+I yy]]},{x,-20.1, 19.9, 10},{y,-20.1, 19.9, 10},{xx,-20.1, 19.9, 10},{yy,-20.1, 19.9, 10}];
+Export[outPath<>"testM.txt", testM];
+Export[outPath<>"testDiscM.txt", testDiscM];
+
+
+testM=ParallelTable[{x,y,xx,yy,Re[expr[x+I y, xx+I yy]],Im[expr[x+I y, xx+I yy]]},{x,-20.1, 19.9, 10},{y,-20.1, 19.9, 10},{xx,-20.1, 19.9, 10},{yy,-20.1, 19.9, 10}];
+testDiscM=ParallelTable[{x,y,xx,yy,Re[discTExpr[x+I y, xx+I yy]],Im[discTExpr[x+I y, xx+I yy]]},{x,-20.1, 19.9, 10},{y,-20.1, 19.9, 10},{xx,-20.1, 19.9, 10},{yy,-20.1, 19.9, 10}];
+Export[outPath<>"testM.txt", testM];
+Export[outPath<>"testDiscM.txt", testDiscM];
+
+
 Print["Amplitude loaded"]
 
 
@@ -182,12 +223,6 @@ discTNumexprSTU[20,30,4-50]-discTexprSTU[20,30,4-50]*)
 
 (* ::Section:: *)
 (*Setting up FG*)
-
-
-Clear[expr,discTExpr,discUExpr]
-expr[s_,z_]=exprSTU[s, tt[s,z],uu[s,z]];
-discTExpr[s_,z_]=discTexprSTU[s,tt[s,z],uu[s,z]];
-discUExpr[s_,z_]=discUexprSTU[s,tt[s,z],uu[s,z]];
 
 
 Clear[exprJmain1,exprJkeyhole,exprJthresh,exprJ]
@@ -274,7 +309,7 @@ CloseKernels[];
 
 
 
-Export[outPath, dataAdapt];
+Export[outPath<>"6dMinN20test.mx", dataAdapt];
 
 
 ListDensityPlot[dataAdapt/. {x_,y_,z_}:>{x,y,Log[Abs[z]]},MeshFunctions->{#3&},Mesh->20,PlotLegends->Automatic,ImageSize->Large]
