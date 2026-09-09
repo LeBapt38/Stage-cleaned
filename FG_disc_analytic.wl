@@ -180,13 +180,19 @@ discTexprSTU[s_,t_,u_]=1/(32\[Pi]) myDiscTM[d,20][[All,1]] . myDiscTM[d,20][[All
 discUexprSTU[s_,t_,u_]=1/(32\[Pi]) myDiscUM[d,20][[All,1]] . myDiscUM[d,20][[All,2]]/.mysdpbout[[2]];
 
 
-Clear[expr,discTExpr,discUExpr]
-expr[s_,z_]=exprSTU[Rationalize[s], tt[Rationalize[s], Rationalize[z]], uu[Rationalize[s], Rationalize[z]]];
-discTExpr[s_,z_]=discTexprSTU[Rationalize[s], tt[Rationalize[s], Rationalize[z]], uu[Rationalize[s], Rationalize[z]]];
+Clear[expr,discTExpr,exprSymb, discTExprSymb]
+exprSymb[s_,z_]=exprSTU[s, tt[s, z], uu[s, z]];
+discTExprSymb[s_,z_]=discTexprSTU[s, tt[s, z], uu[s, z]];
+expr[s_,z_]:=exprSymb[Rationalize[s],Rationalize[z]];
+discTExpr[s_,z_]:=discTExprSymb[Rationalize[s],Rationalize[z]];
 (*discUExpr[s_,z_]=discUexprSTU[s,tt[s,z],uu[s,z]];*)
 
 
-exprSTUrebuilt[ss_, tt_, uu_] := Module[{terms},
+(* ::Text:: *)
+(*Different tests to compare with Julia implementation*)
+
+
+(*exprSTUrebuilt[ss_, tt_, uu_] := Module[{terms},
   terms = M[d, ss, tt, uu, \[Sigma]g[20], pg[20]];
   (terms[[All, 1]] . terms[[All, 2]] /. mysdpbout[[2]]) / (32 Pi)
 ]
@@ -196,22 +202,22 @@ discTexprSTUrebuilt[ss_, tt_, uu_] := Module[{terms},
 ]
 exprRe[s_, z_] := exprSTUrebuilt[Rationalize[s], tt[Rationalize[s], Rationalize[z]], uu[Rationalize[s], Rationalize[z]]]
 discTExprRe[s_, z_] := discTexprSTUrebuilt[Rationalize[s], tt[Rationalize[s], Rationalize[z]], uu[Rationalize[s], Rationalize[z]]]
-N[exprRe[20.1+20.1 I,20.1+20.1 I]]
-expr[Rationalize[20.1+20.1 I],Rationalize[20.1+20.1 I]]
+N[exprRe[-20.1-20.1 I,-20.1-20.1 I]]
+expr[-20.1-20.1 I,-20.1-20.1 I]
 N[discTExprRe[20.1+20.1 I,20.1+20.1 I]]
-discTExpr[Rationalize[20.1+20.1 I],Rationalize[20.1+20.1 I]]
+discTExpr[Rationalize[20.1+20.1 I],Rationalize[20.1+20.1 I]]*)
 
 
-testM=ParallelTable[{x,y,xx,yy,Re[exprRe[x+I y, xx+I yy]],Im[exprRe[x+I y, xx+I yy]]},{x,-20.1, 19.9, 10},{y,-20.1, 19.9, 10},{xx,-20.1, 19.9, 10},{yy,-20.1, 19.9, 10}];
+(*testM=ParallelTable[{x,y,xx,yy,Re[exprRe[x+I y, xx+I yy]],Im[exprRe[x+I y, xx+I yy]]},{x,-20.1, 19.9, 10},{y,-20.1, 19.9, 10},{xx,-20.1, 19.9, 10},{yy,-20.1, 19.9, 10}];
 testDiscM=ParallelTable[{x,y,xx,yy,Re[discTExprRe[x+I y, xx+I yy]],Im[discTExprRe[x+I y, xx+I yy]]},{x,-20.1, 19.9, 10},{y,-20.1, 19.9, 10},{xx,-20.1, 19.9, 10},{yy,-20.1, 19.9, 10}];
 Export[outPath<>"testM.txt", testM];
-Export[outPath<>"testDiscM.txt", testDiscM];
+Export[outPath<>"testDiscM.txt", testDiscM];*)
 
 
-testM=ParallelTable[{x,y,xx,yy,Re[expr[x+I y, xx+I yy]],Im[expr[x+I y, xx+I yy]]},{x,-20.1, 19.9, 10},{y,-20.1, 19.9, 10},{xx,-20.1, 19.9, 10},{yy,-20.1, 19.9, 10}];
+(*testM=ParallelTable[{x,y,xx,yy,Re[expr[x+I y, xx+I yy]],Im[expr[x+I y, xx+I yy]]},{x,-20.1, 19.9, 10},{y,-20.1, 19.9, 10},{xx,-20.1, 19.9, 10},{yy,-20.1, 19.9, 10}];
 testDiscM=ParallelTable[{x,y,xx,yy,Re[discTExpr[x+I y, xx+I yy]],Im[discTExpr[x+I y, xx+I yy]]},{x,-20.1, 19.9, 10},{y,-20.1, 19.9, 10},{xx,-20.1, 19.9, 10},{yy,-20.1, 19.9, 10}];
 Export[outPath<>"testM.txt", testM];
-Export[outPath<>"testDiscM.txt", testDiscM];
+Export[outPath<>"testDiscM.txt", testDiscM];*)
 
 
 Print["Amplitude loaded"]
@@ -239,7 +245,7 @@ exprSTU[ss_,t_,u_]:=div[ss]+div[u]+div[t];
 expr[ss_,z_]:=exprSTU[ss, tt[ss,z],uu[ss,z]];
 DiscExprT[ss_,z_]:=divT[tt[ss,z]];
 exprJmain[JJ_,ss_]:=MyNIntegrateFaster[(PolQ[JJ,d,z]DiscExprT[ss,z])//CompactIntegrand[#,z,z0t[ss]+Exp[I Arg[-1+z0t[ss]]]10^-5]&,{\[Phi],0,\[Pi]},p0];
-exprJkeyhole1[JJ_, ss_, ord_: 6] := Module[
+exprJkeyhole1[JJ_, ss_, ord_: 10] := Module[
 	  {z0, dir, eps, \[Alpha], c0, qk},
 	  z0  = z0t[ss];
 	  dir = Exp[I Arg[z0 - 1]];   (* direction of the cut / keyhole ray *)
@@ -258,7 +264,7 @@ Residue=Sum[If[Boole[EvenQ[d]]-2(n-Floor[(d-3)/2])==0, Sin[\[Pi] (d-3)/2],1]\[Al
 Keyhole=Sum[If[Boole[OddQ[d]]-2(n-Floor[(d-4)/2])==0, Sin[\[Pi] (d-3)/2],1]\[Alpha][0,0,0,Boole[OddQ[d]]-2(n-Floor[(d-4)/2])]exprJkeyhole[J,s,n],{n,Floor[(d-4)/2],0,-1}];
 nd[d]/(32 Pi) (Residue+Keyhole/.mysdpbout[[2]])
 ];
-(*Full expression of the projection. The choice t/u cut done for efficiency purpose, less important with this implementation.*)
+(*Full expression of the projection.*)
 exprJ[J_,s_]:=(*If[Re[s]>4,*)exprJmain1[J,s]+exprJthresh[J,s](*,exprJmain2[J,s]+exprJthresh[J,s]]*)
 
 
@@ -268,20 +274,32 @@ Pgen[J_,d_,z_]:=Hypergeometric2F1[-J,J+d-3,(d-2)/2,(1-z)/2];
 IPt[J_,s_]:=MyNIntegrateFaster[Sin[\[Theta]]*(1-Cos[\[Theta]]^2)^((d-4)/2) Pgen[J,d,Cos[\[Theta]]]*expr[s,Cos[\[Theta]]],{\[Theta],0,Pi},p0]
 
 
-J=3;
-testS=9+10I;
-a=exprJthresh[J,Rationalize[testS]]
-b=IPt[J,Rationalize[testS]]
-Abs[(a-b)/(a+b)]
+(* ::Text:: *)
+(*Testing the case J even.*)
+
+
+(*J=2;
+testS=10.3+3.21I ;
+Timing[a=exprJ[J,testS]]
+Timing[b=IPt[J,Rationalize[testS]]]
+Abs[(a-b)/(a+b)]*)
+
+
+(* ::Text:: *)
+(*Building comparison for Julia code*)
+
+
+(*testJ=ParallelTable[{x,y,xx,yy,Re[exprJ[x+I y, xx+I yy]],Im[exprJ[x+I y, xx+I yy]]},{x,0, 20, 5},{y,-10, 10, 10},{xx,-20.1, 19.9, 10},{yy,-20.1, 19.9, 10}];
+Export[outPath<>"testJ.txt", testJ];*)
 
 
 (* ::Section:: *)
 (*Setting the grid computation*)
 
 
-(*Function to compute the J-plane plotsefficiently (adaptive meshing).*)
-Clear[adaptiveGrid]
-adaptiveGrid[exprJNum_,s_,largeRes_,smallRes_,xRange_, yRange_,coarseIn_:Automatic]:=Module[{coarse,vals,dx,dy,grad,thresh,mask,inds,cells,refined},(*coarse grid*)
+(*Function to compute the J-plane (adaptiveGridS) and s-plane (adaptiveGridJ) plots efficiently (adaptive meshing).*)
+Clear[adaptiveGridS,adaptiveGridJ]
+adaptiveGridS[exprJNum_,s_,largeRes_,smallRes_,xRange_, yRange_,coarseIn_:Automatic]:=Module[{coarse,vals,dx,dy,grad,thresh,mask,inds,cells,refined},(*coarse grid*)
 coarse=If[coarseIn===Automatic,
 DistributeDefinitions[exprJNum];ParallelTable[{x,y,exprJNum[Rationalize[x+I y],Rationalize[s]]},{x,xRange[[1]],xRange[[2]],largeRes},{y,yRange[[1]],yRange[[2]],largeRes}],
 coarseIn];vals=Log[Abs[coarse[[All,All,3]]]];
@@ -294,6 +312,21 @@ inds=Position[mask,True];
 cells=({xRange[[1]]+largeRes (#[[1]]-1),yRange[[1]]+largeRes (#[[2]]-1)}&)/@inds;
 Print["Refining ",Length[cells]," cells"];
 DistributeDefinitions[exprJNum];refined=ParallelMap[Function[{pt},With[{x=pt[[1]],y=pt[[2]]},Table[{xx,yy,exprJNum[Rationalize[xx+I yy],Rationalize[s]]},{xx,x,x+(largeRes-smallRes),smallRes},{yy,y,y+(largeRes-smallRes),smallRes}]]],cells];
+DeleteDuplicatesBy[Join[Flatten[coarse,1],Flatten[refined,2]],#[[1;;2]]&]
+]
+adaptiveGridJ[exprJNum_,J_,largeRes_,smallRes_,xRange_, yRange_,coarseIn_:Automatic]:=Module[{coarse,vals,dx,dy,grad,thresh,mask,inds,cells,refined},(*coarse grid*)
+coarse=If[coarseIn===Automatic,
+DistributeDefinitions[exprJNum];ParallelTable[{x,y,exprJNum[Rationalize[J],Rationalize[x+I y]]},{x,xRange[[1]],xRange[[2]],largeRes},{y,yRange[[1]],yRange[[2]],largeRes}],
+coarseIn];vals=Log[Abs[coarse[[All,All,3]]]];
+dx=Abs[Differences[vals,{1}]][[;;,1;;-2]];
+dy=Abs[Differences[vals,{0,1}]][[1;;-2,;;]];
+grad=Sqrt[dx^2+dy^2]/(1+Abs[(vals[[1;;-2,1;;-2]]+vals[[2;;,1;;-2]]+vals[[1;;-2,2;;]]+vals[[2;;,2;;]])/4]);
+thresh=Quantile[DeleteCases[Flatten[grad],Indeterminate],0.9];
+mask=Map[#>thresh&,grad,{2}];
+inds=Position[mask,True];
+cells=({xRange[[1]]+largeRes (#[[1]]-1),yRange[[1]]+largeRes (#[[2]]-1)}&)/@inds;
+Print["Refining ",Length[cells]," cells"];
+DistributeDefinitions[exprJNum];refined=ParallelMap[Function[{pt},With[{x=pt[[1]],y=pt[[2]]},Table[{xx,yy,exprJNum[Rationalize[J],Rationalize[xx+I yy]]},{xx,x,x+(largeRes-smallRes),smallRes},{yy,y,y+(largeRes-smallRes),smallRes}]]],cells];
 DeleteDuplicatesBy[Join[Flatten[coarse,1],Flatten[refined,2]],#[[1;;2]]&]
 ]
 

@@ -190,6 +190,18 @@ How to use it:
 - This notebook is the trajectory-building step that comes after the Froissart-Gribov grid is available.
 - It still requires manual input to choose the starting points for the trajectories.
 
+### Julia implementation
+
+I tried to migrate the file FG_disc_analytic.wl to Julia to see if it was possible to get a significant speed up. The conclusion is the following:
+
+- The migration is possible, the current code reproduces the computation and is as efficient as the mathematica version.
+
+- Two bottlenecks, the special functions and the integration which are not optimized as well out of the box. These are slightly less stable and not as efficient.
+
+- Two big advantages, the code surrounding exprJ is more efficient and agents are way better with Julia making agentic coding faster.
+
+It may be possible to optimize the code so the Julia version becomes faster than the current mathematica implementation (more precomputation, making sure that nothing is lost on unnecessary precision, more aggressive reconstruction of the amplitude using the fact $n,m\in\{0,1\}$...) but similar optimization may also be possible for the mathematica version. 
+
 # The Regge residues of the Veneziano amplitude
 
 ## Project goal
