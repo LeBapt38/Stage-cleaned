@@ -123,7 +123,7 @@ Main entry points:
 - `myM[d, Nmax]`, `myDiscTM[d, Nmax]`, `myDiscUM[d, Nmax]`: convenience wrappers that build the amplitude and discontinuities using a chosen dimension `d` and a grid size `Nmax`.
 - `exprJmain1[J, s]`, `exprJmain2[J, s]`: regular Froissart-Gribov integrals for the t- and u-channel cuts of the regular part.
 - `exprJkeyhole[J, s, n]`, `exprJthresh[J, s]`: handling of the threshold singular pieces.
-- `exprJ[J, s]`: full analytic projection.
+- `exprJ[J, s]`: full analytic projection. Works for $s,J\in \mathbb C$ except for $s\in \mathbb R_-$ where an imaginary shift is necessary ($+10^{-5}i$ works).
 - `Pgen[J, d, z]`, `IPt[J, s]`: comparison with the standard projection kernel.
 - `adaptiveGrid[exprJNum, s, largeRes, smallRes, xRange, yRange, coarseIn]`: adaptive meshing routine used to compute the J-plane grid efficiently.
 

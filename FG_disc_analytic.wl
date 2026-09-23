@@ -232,7 +232,7 @@ discTNumexprSTU[20,30,4-50]-discTexprSTU[20,30,4-50]*)
 
 
 Clear[exprJmain1,exprJkeyhole,exprJthresh,exprJ]
-p0=8;
+p0=16;
 (*Integration of the regular part (with rho ansatz)*)
 exprJmain1[J_,s_]:=MyNIntegrateFaster[(PolQ[J,d,z]discTExpr[s,z])//CompactIntegrand[#,z,z0t[s]]&,{\[Phi],0,\[Pi]},p0];
 (*exprJmain2[J_,s_]:=MyNIntegrateFaster[(PolQ[J,d,z]discUExpr[s,z])//CompactIntegrand[#,z,z0u[s]]&,{\[Phi],0,\[Pi]},p0];*)
@@ -245,7 +245,7 @@ exprSTU[ss_,t_,u_]:=div[ss]+div[u]+div[t];
 expr[ss_,z_]:=exprSTU[ss, tt[ss,z],uu[ss,z]];
 DiscExprT[ss_,z_]:=divT[tt[ss,z]];
 exprJmain[JJ_,ss_]:=MyNIntegrateFaster[(PolQ[JJ,d,z]DiscExprT[ss,z])//CompactIntegrand[#,z,z0t[ss]+Exp[I Arg[-1+z0t[ss]]]10^-5]&,{\[Phi],0,\[Pi]},p0];
-exprJkeyhole1[JJ_, ss_, ord_: 10] := Module[
+exprJkeyhole1[JJ_, ss_, ord_: 8] := Module[
 	  {z0, dir, eps, \[Alpha], c0, qk},
 	  z0  = z0t[ss];
 	  dir = Exp[I Arg[z0 - 1]];   (* direction of the cut / keyhole ray *)
@@ -265,7 +265,12 @@ Keyhole=Sum[If[Boole[OddQ[d]]-2(n-Floor[(d-4)/2])==0, Sin[\[Pi] (d-3)/2],1]\[Alp
 nd[d]/(32 Pi) (Residue+Keyhole/.mysdpbout[[2]])
 ];
 (*Full expression of the projection.*)
-exprJ[J_,s_]:=(*If[Re[s]>4,*)exprJmain1[J,s]+exprJthresh[J,s](*,exprJmain2[J,s]+exprJthresh[J,s]]*)
+(*exprJ[J_,s_]:=(*If[Re[s]>4,*)exprJmain1[Rationalize[J,10^-p0],Rationalize[s,10^-p0]]+exprJthresh[Rationalize[J,10^-p0],Rationalize[s,10^-p0]](*,exprJmain2[J,s]+exprJthresh[J,s]]*)*)
+exprJ[J_, s_] := Module[{Jrat, srat, prec = p0},
+  Jrat = SetPrecision[Rationalize[J, 10^-prec], prec];
+  srat = SetPrecision[Rationalize[s, 10^-prec], prec];
+  N[exprJmain1[Jrat, srat], prec] + N[exprJthresh[Jrat, srat], prec]
+];
 
 
 (*Definition of the usual projection with Pj*)
@@ -278,11 +283,11 @@ IPt[J_,s_]:=MyNIntegrateFaster[Sin[\[Theta]]*(1-Cos[\[Theta]]^2)^((d-4)/2) Pgen[
 (*Testing the case J even.*)
 
 
-(*J=2;
-testS=10.3+3.21I ;
-Timing[a=exprJ[J,testS]]
+J=2;
+testS=50.301+60.201 I ;
+Timing[a=exprJmain1[J,s]+exprJthresh[J,s]]
 Timing[b=IPt[J,Rationalize[testS]]]
-Abs[(a-b)/(a+b)]*)
+Abs[(a-b)/(a+b)]
 
 
 (* ::Text:: *)
@@ -301,7 +306,7 @@ Export[outPath<>"testJ.txt", testJ];*)
 Clear[adaptiveGridS,adaptiveGridJ]
 adaptiveGridS[exprJNum_,s_,largeRes_,smallRes_,xRange_, yRange_,coarseIn_:Automatic]:=Module[{coarse,vals,dx,dy,grad,thresh,mask,inds,cells,refined},(*coarse grid*)
 coarse=If[coarseIn===Automatic,
-DistributeDefinitions[exprJNum];ParallelTable[{x,y,exprJNum[Rationalize[x+I y],Rationalize[s]]},{x,xRange[[1]],xRange[[2]],largeRes},{y,yRange[[1]],yRange[[2]],largeRes}],
+DistributeDefinitions[exprJNum];ParallelTable[{x,y,exprJNum[Rationalize[x+I y,10^-p0],Rationalize[s,10^-p0]]},{x,xRange[[1]],xRange[[2]],largeRes},{y,yRange[[1]],yRange[[2]],largeRes}],
 coarseIn];vals=Log[Abs[coarse[[All,All,3]]]];
 dx=Abs[Differences[vals,{1}]][[;;,1;;-2]];
 dy=Abs[Differences[vals,{0,1}]][[1;;-2,;;]];
@@ -311,12 +316,12 @@ mask=Map[#>thresh&,grad,{2}];
 inds=Position[mask,True];
 cells=({xRange[[1]]+largeRes (#[[1]]-1),yRange[[1]]+largeRes (#[[2]]-1)}&)/@inds;
 Print["Refining ",Length[cells]," cells"];
-DistributeDefinitions[exprJNum];refined=ParallelMap[Function[{pt},With[{x=pt[[1]],y=pt[[2]]},Table[{xx,yy,exprJNum[Rationalize[xx+I yy],Rationalize[s]]},{xx,x,x+(largeRes-smallRes),smallRes},{yy,y,y+(largeRes-smallRes),smallRes}]]],cells];
+DistributeDefinitions[exprJNum];refined=ParallelMap[Function[{pt},With[{x=pt[[1]],y=pt[[2]]},Table[{xx,yy,exprJNum[Rationalize[xx+I yy,10^-p0],Rationalize[s,10^-p0]]},{xx,x,x+(largeRes-smallRes),smallRes},{yy,y,y+(largeRes-smallRes),smallRes}]]],cells];
 DeleteDuplicatesBy[Join[Flatten[coarse,1],Flatten[refined,2]],#[[1;;2]]&]
 ]
 adaptiveGridJ[exprJNum_,J_,largeRes_,smallRes_,xRange_, yRange_,coarseIn_:Automatic]:=Module[{coarse,vals,dx,dy,grad,thresh,mask,inds,cells,refined},(*coarse grid*)
 coarse=If[coarseIn===Automatic,
-DistributeDefinitions[exprJNum];ParallelTable[{x,y,exprJNum[Rationalize[J],Rationalize[x+I y]]},{x,xRange[[1]],xRange[[2]],largeRes},{y,yRange[[1]],yRange[[2]],largeRes}],
+DistributeDefinitions[exprJNum];ParallelTable[{x,y,exprJNum[Rationalize[J,10^-p0],Rationalize[x+I y,10^-p0]]},{x,xRange[[1]],xRange[[2]],largeRes},{y,yRange[[1]],yRange[[2]],largeRes}],
 coarseIn];vals=Log[Abs[coarse[[All,All,3]]]];
 dx=Abs[Differences[vals,{1}]][[;;,1;;-2]];
 dy=Abs[Differences[vals,{0,1}]][[1;;-2,;;]];
@@ -326,7 +331,7 @@ mask=Map[#>thresh&,grad,{2}];
 inds=Position[mask,True];
 cells=({xRange[[1]]+largeRes (#[[1]]-1),yRange[[1]]+largeRes (#[[2]]-1)}&)/@inds;
 Print["Refining ",Length[cells]," cells"];
-DistributeDefinitions[exprJNum];refined=ParallelMap[Function[{pt},With[{x=pt[[1]],y=pt[[2]]},Table[{xx,yy,exprJNum[Rationalize[J],Rationalize[xx+I yy]]},{xx,x,x+(largeRes-smallRes),smallRes},{yy,y,y+(largeRes-smallRes),smallRes}]]],cells];
+DistributeDefinitions[exprJNum];refined=ParallelMap[Function[{pt},With[{x=pt[[1]],y=pt[[2]]},Table[{xx,yy,exprJNum[Rationalize[J,10^-p0],Rationalize[xx+I yy,10^-p0]]},{xx,x,x+(largeRes-smallRes),smallRes},{yy,y,y+(largeRes-smallRes),smallRes}]]],cells];
 DeleteDuplicatesBy[Join[Flatten[coarse,1],Flatten[refined,2]],#[[1;;2]]&]
 ]
 
@@ -335,7 +340,7 @@ CloseKernels[];
 LaunchKernels[12];
 (*Timing[dataAdapt=Table[Print["Start coarse grid."];
 						adaptiveGrid[exprJ,s+0.01I, 0.2, 0.05,{0.2,8},{-4,4}],{s,-5,50,5}]]*)
-dataAdapt=adaptiveGrid[exprJ,testS, 0.2, 0.05,{1,3},{-1,1}]
+dataAdapt=Table[adaptiveGridJ[exprJ,JJ, 0.5, 0.25,{-10.001,100.001},{0.001,100.001}],{JJ,2,4,0.1}]
 
 CloseKernels[];
 
@@ -345,4 +350,10 @@ CloseKernels[];
 Export[outPath<>"6dMinN20test.mx", dataAdapt];
 
 
-ListDensityPlot[dataAdapt/. {x_,y_,z_}:>{x,y,Log[Abs[z]]},MeshFunctions->{#3&},Mesh->20,PlotLegends->Automatic,ImageSize->Large]
+ListDensityPlot[dataIPt[[1]]/. {x_,y_,z_}:>{x,y,Log[Abs[z]]},MeshFunctions->{#3&},Mesh->20,PlotLegends->Automatic,ImageSize->Large]
+
+
+ListDensityPlot[dataFG[[1]]/. {x_,y_,z_}:>{x,y,Log[Abs[z]]},MeshFunctions->{#3&},Mesh->20,PlotLegends->Automatic,ImageSize->Large]
+
+
+Manipulate[ListDensityPlot[dataAdapt[[k]]/. {x_,y_,z_}:>{x,y,Log[Abs[z]]},MeshFunctions->{#3&},Mesh->20,PlotLegends->Automatic,ImageSize->Large],{k,1,5,1}]
